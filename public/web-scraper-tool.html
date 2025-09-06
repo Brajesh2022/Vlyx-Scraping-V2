@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Scraper Tool - Standalone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .input-section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 1rem;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .api-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .api-option {
+            position: relative;
+        }
+
+        .api-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .api-option label {
+            display: block;
+            padding: 15px 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: white;
+            margin-bottom: 0;
+        }
+
+        .api-option input[type="radio"]:checked + label {
+            border-color: #4f46e5;
+            background: #4f46e5;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #4b5563;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e2e8f0;
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .result-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #374151;
+            word-break: break-all;
+        }
+
+        .code-container {
+            background: #1f2937;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #374151;
+        }
+
+        .code-header {
+            background: #374151;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .code-content {
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #e5e7eb;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-error {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .input-section {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Web Scraper Tool</h1>
+            <p>Extract source code from any website with advanced Cloudflare bypass</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="websiteUrl">Website URL</label>
+                    <input 
+                        type="url" 
+                        id="websiteUrl" 
+                        placeholder="https://example.com" 
+                        value="https://example.com"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>API Endpoint</label>
+                    <div class="api-selector">
+                        <div class="api-option">
+                            <input type="radio" id="htmlApi" name="apiType" value="html" checked>
+                            <label for="htmlApi">
+                                <strong>Clean HTML</strong><br>
+                                <small>Direct HTML output</small>
+                            </label>
+                        </div>
+                        <div class="api-option">
+                            <input type="radio" id="sourceApi" name="apiType" value="source">
+                            <label for="sourceApi">
+                                <strong>JSON Source</strong><br>
+                                <small>With metadata</small>
+                            </label>
+                        </div>
+                        <div class="api-option">
+                            <input type="radio" id="urlApi" name="apiType" value="url">
+                            <label for="urlApi">
+                                <strong>Final URL</strong><br>
+                                <small>URL resolution</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="apiBaseUrl">API Base URL</label>
+                    <input 
+                        type="url" 
+                        id="apiBaseUrl" 
+                        placeholder="https://your-api-domain.com" 
+                        value="https://web-scraper.lindy.site"
+                    >
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="scrapeWebsite()">
+                        <span id="scrapeIcon">🔍</span>
+                        <span id="scrapeText">Scrape Website</span>
+                    </button>
+                    <button class="btn-secondary" onclick="clearResults()">
+                        🗑️ Clear Results
+                    </button>
+                </div>
+            </div>
+
+            <div id="resultsSection" class="results-section">
+                <div class="result-header">
+                    <h3>Scraping Results</h3>
+                    <div>
+                        <span id="statusBadge" class="status-badge"></span>
+                    </div>
+                </div>
+
+                <div id="resultInfo" class="result-info">
+                    <div class="info-grid" id="infoGrid">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span id="codeTitle">Source Code</span>
+                        <div>
+                            <button class="btn-success" onclick="downloadSource()" id="downloadBtn">
+                                💾 Download
+                            </button>
+                            <button class="btn-secondary" onclick="copyToClipboard()" style="margin-left: 10px;">
+                                📋 Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="code-content" id="sourceCode">
+                        <!-- Source code will be displayed here -->
+                    </div>
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;">
+                    <!-- Error messages will be displayed here -->
+                </div>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Cloudflare Bypass</h3>
+                    <p>Advanced techniques to bypass Cloudflare protection and anti-bot measures</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Fast & Reliable</h3>
+                    <p>Optimized for speed with intelligent resource blocking and efficient processing</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>No CORS Issues</h3>
+                    <p>Full CORS support allows scraping from any domain without restrictions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSourceData = null;
+        let currentApiType = 'html';
+
+        // Update API type when radio button changes
+        document.querySelectorAll('input[name="apiType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                currentApiType = this.value;
+            });
+        });
+
+        async function scrapeWebsite() {
+            const url = document.getElementById('websiteUrl').value.trim();
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
+            
+            if (!url) {
+                showError('Please enter a website URL');
+                return;
+            }
+
+            if (!apiBaseUrl) {
+                showError('Please enter the API base URL');
+                return;
+            }
+
+            // Validate URL format
+            try {
+                new URL(url);
+                new URL(apiBaseUrl);
+            } catch (e) {
+                showError('Please enter valid URLs');
+                return;
+            }
+
+            // Update UI to show loading state
+            setLoadingState(true);
+            hideError();
+            
+            try {
+                const apiEndpoint = `${apiBaseUrl}/api/public/${currentApiType}`;
+                
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                if (currentApiType === 'html') {
+                    // For HTML API, get the text directly
+                    const htmlContent = await response.text();
+                    
+                    // Get metadata from headers
+                    const originalUrl = response.headers.get('X-Original-URL') || url;
+                    const finalUrl = response.headers.get('X-Final-URL') || url;
+                    const pageTitle = response.headers.get('X-Page-Title') || 'Unknown';
+                    
+                    currentSourceData = {
+                        type: 'html',
+                        content: htmlContent,
+                        originalUrl: originalUrl,
+                        finalUrl: finalUrl,
+                        title: pageTitle,
+                        timestamp: new Date().toISOString(),
+                        length: htmlContent.length
+                    };
+                    
+                    displayResults(currentSourceData);
+                } else {
+                    // For JSON APIs, parse the response
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'API request failed');
+                    }
+                    
+                    currentSourceData = {
+                        type: currentApiType,
+                        content: currentApiType === 'source' ? data.data.source : JSON.stringify(data.data, null, 2),
+                        ...data.data,
+                        rawResponse: data
+                    };
+                    
+                    displayResults(currentSourceData);
+                }
+
+            } catch (error) {
+                console.error('Scraping error:', error);
+                showError(`Failed to scrape website: ${error.message}`);
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        function displayResults(data) {
+            const resultsSection = document.getElementById('resultsSection');
+            const statusBadge = document.getElementById('statusBadge');
+            const infoGrid = document.getElementById('infoGrid');
+            const sourceCode = document.getElementById('sourceCode');
+            const codeTitle = document.getElementById('codeTitle');
+
+            // Show results section
+            resultsSection.classList.add('show');
+
+            // Update status badge
+            statusBadge.textContent = 'Success';
+            statusBadge.className = 'status-badge status-success';
+
+            // Update info grid based on API type
+            let infoItems = [];
+            
+            if (data.type === 'html') {
+                infoItems = [
+                    { label: 'Original URL', value: data.originalUrl },
+                    { label: 'Final URL', value: data.finalUrl },
+                    { label: 'Page Title', value: data.title },
+                    { label: 'Content Length', value: `${data.length.toLocaleString()} characters` },
+                    { label: 'Timestamp', value: new Date(data.timestamp).toLocaleString() },
+                    { label: 'API Type', value: 'Clean HTML' }
+                ];
+                codeTitle.textContent = 'Clean HTML Source';
+            } else if (data.type === 'source') {
+                infoItems = [
+                    { label: 'Original URL', value: data.original_url },
+                    { label: 'Final URL', value: data.url },
+                    { label: 'Page Title', value: data.title },
+                    { label: 'Content Length', value: `${data.source_length.toLocaleString()} characters` },
+                    { label: 'Timestamp', value: new Date(data.timestamp).toLocaleString() },
+                    { label: 'API Type', value: 'JSON Source' }
+                ];
+                codeTitle.textContent = 'HTML Source Code';
+            } else if (data.type === 'url') {
+                infoItems = [
+                    { label: 'Original URL', value: data.original_url },
+                    { label: 'Final URL', value: data.final_url },
+                    { label: 'Page Title', value: data.title },
+                    { label: 'Domain', value: data.domain },
+                    { label: 'Protocol', value: data.protocol },
+                    { label: 'Redirected', value: data.redirected ? 'Yes' : 'No' },
+                    { label: 'Timestamp', value: new Date(data.timestamp).toLocaleString() },
+                    { label: 'API Type', value: 'URL Resolution' }
+                ];
+                codeTitle.textContent = 'URL Resolution Data';
+            }
+
+            // Populate info grid
+            infoGrid.innerHTML = infoItems.map(item => `
+                <div class="info-item">
+                    <div class="info-label">${item.label}</div>
+                    <div class="info-value">${item.value}</div>
+                </div>
+            `).join('');
+
+            // Display source code
+            sourceCode.textContent = data.content;
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadSource() {
+            if (!currentSourceData) {
+                showError('No source data available to download');
+                return;
+            }
+
+            let filename, content, mimeType;
+            
+            if (currentSourceData.type === 'html' || currentSourceData.type === 'source') {
+                filename = `scraped-${currentSourceData.type}-${Date.now()}.html`;
+                content = currentSourceData.type === 'source' ? currentSourceData.source : currentSourceData.content;
+                mimeType = 'text/html';
+            } else {
+                filename = `url-data-${Date.now()}.json`;
+                content = JSON.stringify(currentSourceData.rawResponse, null, 2);
+                mimeType = 'application/json';
+            }
+
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Show success feedback
+            const downloadBtn = document.getElementById('downloadBtn');
+            const originalText = downloadBtn.innerHTML;
+            downloadBtn.innerHTML = '✅ Downloaded!';
+            downloadBtn.style.background = '#10b981';
+            
+            setTimeout(() => {
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.style.background = '';
+            }, 2000);
+        }
+
+        async function copyToClipboard() {
+            if (!currentSourceData) {
+                showError('No source data available to copy');
+                return;
+            }
+
+            try {
+                let contentToCopy;
+                if (currentSourceData.type === 'html' || currentSourceData.type === 'source') {
+                    contentToCopy = currentSourceData.type === 'source' ? currentSourceData.source : currentSourceData.content;
+                } else {
+                    contentToCopy = JSON.stringify(currentSourceData.rawResponse, null, 2);
+                }
+
+                await navigator.clipboard.writeText(contentToCopy);
+                
+                // Show success feedback
+                const copyBtn = event.target;
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '✅ Copied!';
+                copyBtn.style.background = '#10b981';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.style.background = '';
+                }, 2000);
+            } catch (error) {
+                showError('Failed to copy to clipboard');
+            }
+        }
+
+        function clearResults() {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.classList.remove('show');
+            currentSourceData = null;
+            hideError();
+        }
+
+        function setLoadingState(loading) {
+            const scrapeIcon = document.getElementById('scrapeIcon');
+            const scrapeText = document.getElementById('scrapeText');
+            const scrapeBtn = document.querySelector('.btn-primary');
+
+            if (loading) {
+                scrapeIcon.innerHTML = '<div class="loading"></div>';
+                scrapeText.textContent = 'Scraping...';
+                scrapeBtn.disabled = true;
+            } else {
+                scrapeIcon.textContent = '🔍';
+                scrapeText.textContent = 'Scrape Website';
+                scrapeBtn.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = 'Error';
+            statusBadge.className = 'status-badge status-error';
+        }
+
+        function hideError() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.style.display = 'none';
+        }
+
+        // Allow Enter key to trigger scraping
+        document.getElementById('websiteUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                scrapeWebsite();
+            }
+        });
+
+        // Auto-focus on URL input
+        document.getElementById('websiteUrl').focus();
+    </script>
+</body>
+</html>
