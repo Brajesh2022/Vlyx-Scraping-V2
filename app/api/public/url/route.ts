@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
-import UserAgent from 'user-agents';
 
 // CORS headers for public API access
 const corsHeaders = {

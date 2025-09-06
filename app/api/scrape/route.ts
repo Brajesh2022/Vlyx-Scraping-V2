@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
-import UserAgent from 'user-agents';
 
 export async function POST(request: NextRequest) {
   let browser;
