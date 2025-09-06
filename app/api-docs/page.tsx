@@ -1,3 +1,4 @@
+import Link from 'next/link';
 'use client';
 
 import { useState } from 'react';
@@ -494,16 +495,16 @@ curl "${baseUrl}/api/public/html?url=https://example.com" \\
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   Download Standalone Tool
-                </a>
+                </Link>
               </Button>
             </div>
           </p>
           <div className="flex items-center justify-center gap-4 mt-4">
             <Button variant="outline" size="sm" asChild>
-              <a href="/" className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 Web Interface
-              </a>
+              </Link>
             </Button>
           </div>
         </div>

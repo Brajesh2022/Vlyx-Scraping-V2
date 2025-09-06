@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
           // Random scroll
           await page.mouse.wheel(0, Math.random() * 500);
           await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (e) {
+        } catch (_) {
           console.log('Human simulation failed:', e.message);
         }
         
@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
               { timeout: 20000 }
             ).catch(() => console.log('Content change timeout')),
           ]);
-        } catch (e) {
+        } catch (_) {
           console.log(`Detection timeout on attempt ${attempts}`);
         }
         

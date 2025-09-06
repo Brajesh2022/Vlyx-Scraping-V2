@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
           waitUntil: 'domcontentloaded', 
           timeout: 10000 
         }).catch(() => console.log('Public URL API: Navigation timeout'));
-      } catch (e) {
+      } catch (_) {
         console.log(`Public URL API: Detection timeout on attempt ${attempts}`);
       }
     }

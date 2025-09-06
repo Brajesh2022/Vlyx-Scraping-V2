@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 500));
           await page.mouse.wheel(0, Math.random() * 500);
           await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (e) {
+        } catch (_) {
           console.log('Public HTML API: Human simulation failed:', e.message);
         }
         
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
               { timeout: 15000 }
             ).catch(() => console.log('Public HTML API: Content change timeout')),
           ]);
-        } catch (e) {
+        } catch (_) {
           console.log(`Public HTML API: Detection timeout on attempt ${attempts}`);
         }
         
