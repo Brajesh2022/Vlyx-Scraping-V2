@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
-import UserAgent from 'user-agents';
 
 // CORS headers for public API access
 const corsHeaders = {
@@ -104,7 +103,7 @@ export async function POST(request: NextRequest) {
       Object.defineProperty(navigator, 'webdriver', {
         get: () => undefined,
       });
-      delete navigator.webdriver;
+      // Note: Cannot delete read-only property, but we've overridden it above
 
       Object.defineProperty(navigator, 'plugins', {
         get: () => ({
@@ -208,7 +207,7 @@ export async function POST(request: NextRequest) {
           waitUntil: 'domcontentloaded', 
           timeout: 10000 
         }).catch(() => console.log('Public URL API: Navigation timeout'));
-      } catch (e) {
+      } catch {
         console.log(`Public URL API: Detection timeout on attempt ${attempts}`);
       }
     }

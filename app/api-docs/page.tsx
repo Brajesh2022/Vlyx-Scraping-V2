@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -500,10 +501,10 @@ curl "${baseUrl}/api/public/html?url=https://example.com" \\
           </p>
           <div className="flex items-center justify-center gap-4 mt-4">
             <Button variant="outline" size="sm" asChild>
-              <a href="/" className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 Web Interface
-              </a>
+              </Link>
             </Button>
           </div>
         </div>
