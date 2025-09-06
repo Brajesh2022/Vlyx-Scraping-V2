@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
-import UserAgent from 'user-agents';
 
 export async function POST(request: NextRequest) {
   let browser;
@@ -70,7 +69,7 @@ export async function POST(request: NextRequest) {
       Object.defineProperty(navigator, 'webdriver', {
         get: () => undefined,
       });
-      delete navigator.webdriver;
+      // Note: Cannot delete read-only property, but we've overridden it above
 
       // Override plugins with realistic values
       Object.defineProperty(navigator, 'plugins', {
@@ -89,11 +88,19 @@ export async function POST(request: NextRequest) {
 
       // Override permissions
       const originalQuery = window.navigator.permissions.query;
-      window.navigator.permissions.query = (parameters) => (
-        parameters.name === 'notifications' ?
-          Promise.resolve({ state: Notification.permission }) :
-          originalQuery(parameters)
-      );
+      window.navigator.permissions.query = (parameters) => {
+        if (parameters.name === 'notifications') {
+          return Promise.resolve({ 
+            state: Notification.permission,
+            name: 'notifications',
+            onchange: null,
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            dispatchEvent: () => false
+          } as PermissionStatus);
+        }
+        return originalQuery(parameters);
+      };
 
       // Override chrome runtime
       Object.defineProperty(window, 'chrome', {
@@ -121,7 +128,7 @@ export async function POST(request: NextRequest) {
       // Override toString methods to hide automation
       const originalToString = Function.prototype.toString;
       Function.prototype.toString = function() {
-        if (this === navigator.webdriver) {
+        if (this === (navigator as unknown as { webdriver?: unknown }).webdriver) {
           return 'function webdriver() { [native code] }';
         }
         return originalToString.call(this);
@@ -244,10 +251,12 @@ export async function POST(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 500));
           
           // Random scroll
-          await page.mouse.wheel(0, Math.random() * 500);
+          await page.evaluate(() => {
+            window.scrollBy(0, Math.random() * 500);
+          });
           await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (e) {
-          console.log('Human simulation failed:', e.message);
+        } catch (error) {
+          console.log('Human simulation failed:', error instanceof Error ? error.message : 'Unknown error');
         }
         
         // Wait for Cloudflare to process
@@ -275,7 +284,7 @@ export async function POST(request: NextRequest) {
               { timeout: 20000 }
             ).catch(() => console.log('Content change timeout')),
           ]);
-        } catch (e) {
+        } catch {
           console.log(`Detection timeout on attempt ${attempts}`);
         }
         

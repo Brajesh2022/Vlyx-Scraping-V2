@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
-import UserAgent from 'user-agents';
 
 // CORS headers for public API access
 const corsHeaders = {
@@ -97,7 +96,7 @@ export async function POST(request: NextRequest) {
       Object.defineProperty(navigator, 'webdriver', {
         get: () => undefined,
       });
-      delete navigator.webdriver;
+      // Note: Cannot delete read-only property, but we've overridden it above
 
       // Override plugins with realistic values
       Object.defineProperty(navigator, 'plugins', {
@@ -116,11 +115,19 @@ export async function POST(request: NextRequest) {
 
       // Override permissions
       const originalQuery = window.navigator.permissions.query;
-      window.navigator.permissions.query = (parameters) => (
-        parameters.name === 'notifications' ?
-          Promise.resolve({ state: Notification.permission }) :
-          originalQuery(parameters)
-      );
+      window.navigator.permissions.query = (parameters) => {
+        if (parameters.name === 'notifications') {
+          return Promise.resolve({ 
+            state: Notification.permission,
+            name: 'notifications',
+            onchange: null,
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            dispatchEvent: () => false
+          } as PermissionStatus);
+        }
+        return originalQuery(parameters);
+      };
 
       // Override chrome runtime
       Object.defineProperty(window, 'chrome', {
@@ -257,10 +264,12 @@ export async function POST(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
           await page.mouse.click(Math.random() * 1000, Math.random() * 800);
           await new Promise(resolve => setTimeout(resolve, 500));
-          await page.mouse.wheel(0, Math.random() * 500);
+          await page.evaluate(() => {
+            window.scrollBy(0, Math.random() * 500);
+          });
           await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (e) {
-          console.log('Public HTML API: Human simulation failed:', e.message);
+        } catch (error) {
+          console.log('Public HTML API: Human simulation failed:', error instanceof Error ? error.message : 'Unknown error');
         }
         
         // Wait for Cloudflare to process
@@ -288,7 +297,7 @@ export async function POST(request: NextRequest) {
               { timeout: 15000 }
             ).catch(() => console.log('Public HTML API: Content change timeout')),
           ]);
-        } catch (e) {
+        } catch {
           console.log(`Public HTML API: Detection timeout on attempt ${attempts}`);
         }
         
