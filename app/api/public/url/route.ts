@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       Object.defineProperty(navigator, 'webdriver', {
         get: () => undefined,
       });
-      delete navigator.webdriver;
+      try { delete (navigator as any).webdriver; } catch (_) { // Ignore if property is read-only }
 
       Object.defineProperty(navigator, 'plugins', {
         get: () => ({
