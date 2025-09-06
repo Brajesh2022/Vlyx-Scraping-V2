@@ -103,7 +103,12 @@ export async function POST(request: NextRequest) {
       Object.defineProperty(navigator, 'webdriver', {
         get: () => undefined,
       });
-      try { delete (navigator as any).webdriver; } catch (_) { // Ignore if property is read-only }
+      try { 
+        delete (navigator as unknown as Record<string, unknown>).webdriver; 
+      } catch (e) { 
+        // Ignore if property is read-only 
+        console.log('Could not delete webdriver property:', e);
+      }
 
       Object.defineProperty(navigator, 'plugins', {
         get: () => ({
@@ -207,7 +212,7 @@ export async function POST(request: NextRequest) {
           waitUntil: 'domcontentloaded', 
           timeout: 10000 
         }).catch(() => console.log('Public URL API: Navigation timeout'));
-      } catch (_) {
+      } catch {
         console.log(`Public URL API: Detection timeout on attempt ${attempts}`);
       }
     }

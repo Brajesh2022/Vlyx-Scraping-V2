@@ -69,7 +69,12 @@ export async function POST(request: NextRequest) {
       Object.defineProperty(navigator, 'webdriver', {
         get: () => undefined,
       });
-      try { delete (navigator as any).webdriver; } catch (_) { // Ignore if property is read-only }
+      try { 
+        delete (navigator as unknown as Record<string, unknown>).webdriver; 
+      } catch (e) { 
+        // Ignore if property is read-only 
+        console.log('Could not delete webdriver property:', e);
+      }
 
       // Override plugins with realistic values
       Object.defineProperty(navigator, 'plugins', {
@@ -90,7 +95,14 @@ export async function POST(request: NextRequest) {
       const originalQuery = window.navigator.permissions.query;
       window.navigator.permissions.query = (parameters) => (
         parameters.name === 'notifications' ?
-          Promise.resolve({ state: Notification.permission }) :
+          Promise.resolve({ 
+            state: Notification.permission,
+            name: parameters.name,
+            onchange: null,
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            dispatchEvent: () => false
+          } as PermissionStatus) :
           originalQuery(parameters)
       );
 
@@ -120,9 +132,6 @@ export async function POST(request: NextRequest) {
       // Override toString methods to hide automation
       const originalToString = Function.prototype.toString;
       Function.prototype.toString = function() {
-        if (this === navigator.webdriver) {
-          return 'function webdriver() { [native code] }';
-        }
         return originalToString.call(this);
       };
     });
@@ -243,10 +252,10 @@ export async function POST(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 500));
           
           // Random scroll
-          await page.mouse.wheel(0, Math.random() * 500);
+          await page.evaluate(() => window.scrollBy(0, Math.random() * 500));
           await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (_) {
-          console.log('Human simulation failed:', e.message);
+        } catch (e) {
+          console.log('Human simulation failed:', e instanceof Error ? e.message : String(e));
         }
         
         // Wait for Cloudflare to process
@@ -274,7 +283,7 @@ export async function POST(request: NextRequest) {
               { timeout: 20000 }
             ).catch(() => console.log('Content change timeout')),
           ]);
-        } catch (_) {
+        } catch {
           console.log(`Detection timeout on attempt ${attempts}`);
         }
         
